@@ -2,6 +2,7 @@ package com.example.mylastpassphone;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -15,6 +16,7 @@ import android.widget.SearchView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Data extends AppCompatActivity {
 
@@ -28,10 +30,9 @@ public class Data extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data);
 
+
         ListView dataListView = findViewById(R.id.dataList);
         List<String> dataList = new ArrayList<>();
-
-        Button back = findViewById(R.id.back);
 
 
         url = "url:";
@@ -44,5 +45,9 @@ public class Data extends AppCompatActivity {
 
         dataArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, dataList);
         dataListView.setAdapter(dataArrayAdapter);
+
+
     }
+
+
 }

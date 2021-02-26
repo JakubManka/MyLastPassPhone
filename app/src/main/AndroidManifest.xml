@@ -12,7 +12,8 @@
         <activity
             android:name=".Data"
             android:label="@string/title_activity_data"
-            android:theme="@style/Theme.MyLastPassPhone.NoActionBar"></activity>
+            android:theme="@style/Theme.MyLastPassPhone.NoActionBar"
+            android:parentActivityName=".MainActivity"></activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
