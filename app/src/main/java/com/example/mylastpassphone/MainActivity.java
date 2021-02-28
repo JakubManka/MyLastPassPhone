@@ -1,11 +1,20 @@
 package com.example.mylastpassphone;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import com.fasterxml.jackson.dataformat.csv;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+
+import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -14,12 +23,20 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SearchView;
+import android.widget.Toast;
 import android.widget.Toolbar;
 
 
+import org.jetbrains.annotations.NotNull;
+
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     Intent myFileIntent;
     ListView listView;
     List<String> list;
+    List<String[]> csvData;
+    private final int STORAGE_PERMISSION_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,37 +56,20 @@ public class MainActivity extends AppCompatActivity {
 
         listView = findViewById(R.id.list);
         list = new ArrayList<>();
-        list.add("Kuba");
-        list.add("duba");
-        list.add("mamaa");
-        list.add("sdasa");
-        list.add("dsdf");
-        list.add("zewrw");
-        list.add("dsdf");
-        list.add("zewrw");
-        list.add("dsdf");
-        list.add("zewrw");
-        list.add("dsdf");
-        list.add("zewrw");
-        list.add("dsdf");
-        list.add("zewrw");
-        list.add("dsdf");
-        list.add("zewrw");
-        list.add("dsdf");
-        list.add("zewrw");
-        list.add("dsdf");
-        list.add("zewrw");
-        list.add("dsdf");
-        list.add("zewrw");
-        list.add("dsdf");
-        list.add("zewrw");
+        csvData = new ArrayList<>();
+        list.add("SSSSS");
 
         arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
         listView.setAdapter(arrayAdapter);
 
-        listView.setOnItemClickListener((parent, view, position, id) -> startActivity(new Intent(MainActivity.this, Data.class)));
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            Intent intent = new Intent(MainActivity.this, Data.class);
+            intent.putExtra("url", csvData.get(position+1)[0]);
+            intent.putExtra("username", csvData.get(position+1)[1]);
+            intent.putExtra("password", csvData.get(position+1)[2]);
+            startActivity(new Intent(intent));
 
-
+        });
     }
 
     @Override
@@ -97,6 +99,13 @@ public class MainActivity extends AppCompatActivity {
 
         addItem.setOnMenuItemClickListener(item -> {
 
+            if (ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+                Toast.makeText(MainActivity.this, "You have perrmision", Toast.LENGTH_SHORT).show();
+            }else {
+                requestStoragePermission();
+            }
+
             myFileIntent = new Intent(Intent.ACTION_GET_CONTENT);
             myFileIntent.setType("*/*");
             startActivityForResult(myFileIntent, 10);
@@ -106,18 +115,77 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    private void requestStoragePermission(){
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)){
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Persmission needed")
+                    .setMessage("This permission is needed to read the csv file")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .create().show();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions, @NonNull @NotNull int[] grantResults) {
+       if (requestCode == STORAGE_PERMISSION_CODE) {
+           if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+               Toast.makeText(this, "Permission GRANTED", Toast.LENGTH_SHORT).show();
+           }else {
+               Toast.makeText(this, "Permission DENIED", Toast.LENGTH_SHORT).show();
+           }
+       }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 10) {
-            String path = Objects.requireNonNull(data).getData().getPath();
+//            Uri uri = Objects.requireNonNull(data).getData();
+//            File file = new File(uri.getPath());//create path from uri
+            String path = "/storage/emulated/0/Download/lastpass_export.csv";
+//            String path = file.getAbsolutePath();
+//            File downloadFolder = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+//            String path = downloadFolder.getAbsolutePath();
+            try {
+                setList(path);
 
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private void convertToJson(){
 
+    private void setList(String path) throws IOException {
+        String line = "";
+
+        BufferedReader br = new BufferedReader(new FileReader(path));
+
+        while((line = br.readLine()) != null){
+            csvData.add(line.split(","));
+            list.clear();
+
+            for (int i =1; i<csvData.size(); i++) {
+                list.add(csvData.get(i)[0]);
+            }
+        }
+
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
+        listView.setAdapter(arrayAdapter);
     }
-
 
 }

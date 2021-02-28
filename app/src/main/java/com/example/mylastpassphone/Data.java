@@ -24,20 +24,21 @@ public class Data extends AppCompatActivity {
     String url;
     String username;
     String password;
+    MainActivity mainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_data);
 
-
         ListView dataListView = findViewById(R.id.dataList);
         List<String> dataList = new ArrayList<>();
 
 
-        url = "url:";
-        username = "username:";
-        password = "password:";
+
+        url = "url: " + getIntent().getStringExtra("url");
+        username = "username: " + getIntent().getStringExtra("username");
+        password = "password: " + "123kksksksksks";
 
         dataList.add(url);
         dataList.add(username);
