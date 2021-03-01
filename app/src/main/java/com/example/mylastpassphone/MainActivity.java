@@ -11,49 +11,37 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SearchView;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.Toolbar;
 
 
 import org.jetbrains.annotations.NotNull;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
     ArrayAdapter<String> arrayAdapter;
     Intent myFileIntent;
     ListView listView;
-    List<String> list;
-    List<String[]> csvData;
+    List<String> urlList;
+    List<Data> csvData;
     private final int STORAGE_PERMISSION_CODE = 1;
+    private static final String FILE_NAME = "csvData.txt";
 
 
     @Override
@@ -62,24 +50,34 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         listView = findViewById(R.id.list);
-        list = new ArrayList<>();
+        urlList = new ArrayList<>();
         csvData = new ArrayList<>();
-        list.add("SSSSS");
+        urlList.add("SSSSS");
 
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, urlList);
         listView.setAdapter(arrayAdapter);
 
         listView.setOnItemClickListener((parent, view, position, id) -> {
 //            TextView textView = (TextView) view.findViewById(R.id.list)
             System.out.println("id " + listView.getItemAtPosition(position).toString());
-            Intent intent = new Intent(MainActivity.this, Data.class);
-            intent.putExtra("url", csvData.get(position+1)[0]);
-            intent.putExtra("username", csvData.get(position+1)[1]);
-            intent.putExtra("password", csvData.get(position+1)[2]);
+            Intent intent = new Intent(MainActivity.this, DataActivity.class);
+            Data correctData = csvData.stream()
+                    .filter(data -> data.getUrl().equals(listView.getItemAtPosition(position).toString()))
+                    .findFirst()
+                    .get();
+            intent.putExtra("url", correctData.getUrl());
+            intent.putExtra("username", correctData.getUsername());
+            intent.putExtra("password", correctData.getPassword());
             startActivity(new Intent(intent));
 
 
         });
+
+        try {
+            Load();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -110,9 +108,9 @@ public class MainActivity extends AppCompatActivity {
         addItem.setOnMenuItemClickListener(item -> {
 
             if (ContextCompat.checkSelfPermission(MainActivity.this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+                    Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(MainActivity.this, "You have perrmision", Toast.LENGTH_SHORT).show();
-            }else {
+            } else {
                 requestStoragePermission();
             }
 
@@ -125,8 +123,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    private void requestStoragePermission(){
-        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)){
+    private void requestStoragePermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
 
             new AlertDialog.Builder(this)
                     .setTitle("Persmission needed")
@@ -134,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                     .setPositiveButton("ok", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
                         }
                     })
                     .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
@@ -145,19 +143,19 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .create().show();
         } else {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, STORAGE_PERMISSION_CODE);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions, @NonNull @NotNull int[] grantResults) {
-       if (requestCode == STORAGE_PERMISSION_CODE) {
-           if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-               Toast.makeText(this, "Permission GRANTED", Toast.LENGTH_SHORT).show();
-           }else {
-               Toast.makeText(this, "Permission DENIED", Toast.LENGTH_SHORT).show();
-           }
-       }
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permission GRANTED", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Permission DENIED", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -168,10 +166,9 @@ public class MainActivity extends AppCompatActivity {
 //            File file = new File(uri.getPath());//create path from uri
             String path = "/storage/emulated/0/Download/lastpass_export.csv";
 //            String path = file.getAbsolutePath();
-//            File downloadFolder = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
-//            String path = downloadFolder.getAbsolutePath();
+            System.out.println(path);
             try {
-                setList(path);
+                setUrlList(path);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -180,27 +177,95 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void setList(String path) throws IOException {
-        String line = "";
-
+    private void setUrlList(String path) throws IOException {
+//        String line = "";
+//        int id = 0;
         BufferedReader br = new BufferedReader(new FileReader(path));
 
+
+//        while ((line = br.readLine()) != null) {
+//            if (line.contains("http://")) {
+//                line = line.replace("http://", "");
+//            } else if (line.contains("https://")) {
+//                line = line.replace("https://", "");
+//            }
+//            String[] s = line.split(",");
+//            csvData.add(new Data(s[0], s[1], s[2], id));
+//            id++;
+//            urlList.clear();
+//
+//            for (int i = 1; i < csvData.size(); i++) {
+//                urlList.add(csvData.get(i).getUrl());
+//            }
+
+        csvRead(br);
+        Save();
+
+//            arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, urlList);
+//            listView.setAdapter(arrayAdapter);
+    }
+
+
+
+
+
+    public void Save() throws IOException {
+        StringBuilder s = new StringBuilder();
+//        s.append("url,username,password\n");
+
+        for (Data data : csvData) {
+            s.append(data.getUrl()).append(",").append(data.getUsername()).append(",").append(data.getPassword()).append("\n");
+        }
+        FileOutputStream fos = null;
+        try {
+            fos = openFileOutput(FILE_NAME, MODE_PRIVATE);
+            fos.write(s.toString().getBytes());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fos != null) {
+                fos.close();
+            }
+        }
+    }
+
+    public void Load() throws IOException {
+        FileInputStream fis = null;
+
+        fis = openFileInput(FILE_NAME);
+        InputStreamReader isr = new InputStreamReader(fis);
+        BufferedReader br = new BufferedReader(isr);
+
+        csvRead(br);
+        fis.close();
+
+    }
+
+    public void csvRead(BufferedReader br) throws IOException {
+        urlList.clear();
+        csvData.clear();
+        String line = "";
+        int id = 0;
         while ((line = br.readLine()) != null) {
             if (line.contains("http://")) {
                 line = line.replace("http://", "");
             } else if (line.contains("https://")) {
                 line = line.replace("https://", "");
             }
-                csvData.add(line.split(","));
-                list.clear();
+            String[] s = line.split(",");
+            if(s.length >= 3){
+                csvData.add(new Data(s[0], s[1], s[2], id));
 
-                for (int i = 1; i < csvData.size(); i++) {
-                    list.add(csvData.get(i)[0]);
-                }
-
-            arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
-            listView.setAdapter(arrayAdapter);
+                id++;
+            }
         }
-        System.out.println(csvData.size());
+
+        for (int i = 1; i < csvData.size(); i++) {
+            urlList.add(csvData.get(i).getUrl());
+        }
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, urlList);
+        listView.setAdapter(arrayAdapter);
     }
 }

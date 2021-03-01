@@ -1,54 +1,35 @@
 package com.example.mylastpassphone;
 
-import androidx.appcompat.app.AppCompatActivity;
+public class Data {
 
-import android.app.ActionBar;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.SearchView;
+    private String url;
+    private String username;
+    private String password;
+    private int id;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
-public class Data extends AppCompatActivity {
-
-    ArrayAdapter<String> dataArrayAdapter;
-    String url;
-    String username;
-    String password;
-    MainActivity mainActivity;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_data);
-
-        ListView dataListView = findViewById(R.id.dataList);
-        List<String> dataList = new ArrayList<>();
-
-
-
-        url = "url: " + getIntent().getStringExtra("url");
-        username = "username: " + getIntent().getStringExtra("username");
-        password = "password: " + "123kksksksksks";
-
-        dataList.add(url);
-        dataList.add(username);
-        dataList.add(password);
-
-        dataArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, dataList);
-        dataListView.setAdapter(dataArrayAdapter);
-
-
+    public Data() {
     }
 
+    public Data(String url, String username, String password, int id) {
+        this.url = url;
+        this.username = username;
+        this.password = password;
+        this.id = id;
+    }
 
+    public String getUrl() {
+        return url;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public int getId() {
+        return id;
+    }
 }

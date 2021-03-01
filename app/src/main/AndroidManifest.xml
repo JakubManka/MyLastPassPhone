@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MyLastPassPhone">
         <activity
-            android:name=".Data"
+            android:name=".DataActivity"
             android:label="@string/title_activity_data"
             android:theme="@style/Theme.MyLastPassPhone.NoActionBar"
             android:parentActivityName=".MainActivity"></activity>
