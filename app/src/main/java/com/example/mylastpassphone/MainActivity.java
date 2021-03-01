@@ -24,11 +24,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
 
 import org.jetbrains.annotations.NotNull;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -68,11 +70,14 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(arrayAdapter);
 
         listView.setOnItemClickListener((parent, view, position, id) -> {
+//            TextView textView = (TextView) view.findViewById(R.id.list)
+            System.out.println("id " + listView.getItemAtPosition(position).toString());
             Intent intent = new Intent(MainActivity.this, Data.class);
             intent.putExtra("url", csvData.get(position+1)[0]);
             intent.putExtra("username", csvData.get(position+1)[1]);
             intent.putExtra("password", csvData.get(position+1)[2]);
             startActivity(new Intent(intent));
+
 
         });
     }
@@ -180,25 +185,22 @@ public class MainActivity extends AppCompatActivity {
 
         BufferedReader br = new BufferedReader(new FileReader(path));
 
-        while((line = br.readLine()) != null){
-            csvData.add(line.split(","));
-            list.clear();
-
-            for (int i =1; i<csvData.size(); i++) {
-                list.add(csvData.get(i)[0]);
+        while ((line = br.readLine()) != null) {
+            if (line.contains("http://")) {
+                line = line.replace("http://", "");
+            } else if (line.contains("https://")) {
+                line = line.replace("https://", "");
             }
+                csvData.add(line.split(","));
+                list.clear();
+
+                for (int i = 1; i < csvData.size(); i++) {
+                    list.add(csvData.get(i)[0]);
+                }
+
+            arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
+            listView.setAdapter(arrayAdapter);
         }
-
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
-        listView.setAdapter(arrayAdapter);
+        System.out.println(csvData.size());
     }
-
-    public void saveData(String path) {
-
-    }
-
-    public void loadData(){
-
-    }
-
 }
