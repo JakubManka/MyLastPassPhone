@@ -2,4 +2,7 @@
     <string name="app_name">MyLastPassPhone</string>
     <string name="title_activity_data">Data</string>
     <string name="back">back</string>
+    <string name="url">URL: </string>
+    <string name="username">Username: </string>
+    <string name="password">Password: </string>
 </resources>

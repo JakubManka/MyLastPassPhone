@@ -178,31 +178,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void setUrlList(String path) throws IOException {
-//        String line = "";
-//        int id = 0;
         BufferedReader br = new BufferedReader(new FileReader(path));
-
-
-//        while ((line = br.readLine()) != null) {
-//            if (line.contains("http://")) {
-//                line = line.replace("http://", "");
-//            } else if (line.contains("https://")) {
-//                line = line.replace("https://", "");
-//            }
-//            String[] s = line.split(",");
-//            csvData.add(new Data(s[0], s[1], s[2], id));
-//            id++;
-//            urlList.clear();
-//
-//            for (int i = 1; i < csvData.size(); i++) {
-//                urlList.add(csvData.get(i).getUrl());
-//            }
-
         csvRead(br);
         Save();
-
-//            arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, urlList);
-//            listView.setAdapter(arrayAdapter);
     }
 
 
@@ -211,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void Save() throws IOException {
         StringBuilder s = new StringBuilder();
-//        s.append("url,username,password\n");
 
         for (Data data : csvData) {
             s.append(data.getUrl()).append(",").append(data.getUsername()).append(",").append(data.getPassword()).append("\n");
