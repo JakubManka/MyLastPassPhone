@@ -33,8 +33,6 @@ public class DataActivity extends AppCompatActivity {
     String password;
     CheckBox checkBox;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +46,7 @@ public class DataActivity extends AppCompatActivity {
 
         url = getIntent().getStringExtra("url");
         username = getIntent().getStringExtra("username");
-        password = "123kksksksksks";
+        password = getIntent().getStringExtra("password");
 
         urlTextView.setText(url);
         usernameTextView.setText(username);

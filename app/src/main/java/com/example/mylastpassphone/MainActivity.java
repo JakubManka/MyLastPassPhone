@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
+import android.widget.Filter;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> arrayAdapter;
     Intent myFileIntent;
     ListView listView;
-    List<String> urlList;
+    List<String> urlList; //list contains the name of the websites
     List<Data> csvData;
     private final int STORAGE_PERMISSION_CODE = 1;
     private static final String FILE_NAME = "csvData.txt";
@@ -52,25 +53,23 @@ public class MainActivity extends AppCompatActivity {
         listView = findViewById(R.id.list);
         urlList = new ArrayList<>();
         csvData = new ArrayList<>();
-        urlList.add("SSSSS");
 
         arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, urlList);
         listView.setAdapter(arrayAdapter);
 
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-//            TextView textView = (TextView) view.findViewById(R.id.list)
+        listView.setOnItemClickListener((parent, view, position, id) -> {  // After clicking the url Activity is changed
             System.out.println("id " + listView.getItemAtPosition(position).toString());
             Intent intent = new Intent(MainActivity.this, DataActivity.class);
             Data correctData = csvData.stream()
                     .filter(data -> data.getUrl().equals(listView.getItemAtPosition(position).toString()))
                     .findFirst()
                     .get();
+
             intent.putExtra("url", correctData.getUrl());
             intent.putExtra("username", correctData.getUsername());
             intent.putExtra("password", correctData.getPassword());
+
             startActivity(new Intent(intent));
-
-
         });
 
         try {
@@ -100,7 +99,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                arrayAdapter.getFilter().filter(newText);
+                urlList.clear();
+                for(Data data: dataFilter(newText)) {
+                    urlList.add(data.getUrl());
+                }
+                listView.setAdapter(arrayAdapter);
                 return true;
             }
         });
@@ -183,32 +186,20 @@ public class MainActivity extends AppCompatActivity {
         Save();
     }
 
-
-
-
-
-    public void Save() throws IOException {
+    public void Save() throws IOException {  // save to file
         StringBuilder s = new StringBuilder();
 
         for (Data data : csvData) {
             s.append(data.getUrl()).append(",").append(data.getUsername()).append(",").append(data.getPassword()).append("\n");
         }
-        FileOutputStream fos = null;
-        try {
-            fos = openFileOutput(FILE_NAME, MODE_PRIVATE);
+        try (FileOutputStream fos = openFileOutput(FILE_NAME, MODE_PRIVATE)) {
             fos.write(s.toString().getBytes());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (fos != null) {
-                fos.close();
-            }
         }
     }
 
-    public void Load() throws IOException {
+    public void Load() throws IOException { // load from file
         FileInputStream fis = null;
 
         fis = openFileInput(FILE_NAME);
@@ -217,20 +208,14 @@ public class MainActivity extends AppCompatActivity {
 
         csvRead(br);
         fis.close();
-
     }
 
-    public void csvRead(BufferedReader br) throws IOException {
+    public void csvRead(BufferedReader br) throws IOException { // read the csv file
         urlList.clear();
         csvData.clear();
         String line = "";
         int id = 0;
         while ((line = br.readLine()) != null) {
-            if (line.contains("http://")) {
-                line = line.replace("http://", "");
-            } else if (line.contains("https://")) {
-                line = line.replace("https://", "");
-            }
             String[] s = line.split(",");
             if(s.length >= 3){
                 csvData.add(new Data(s[0], s[1], s[2], id));
@@ -239,10 +224,29 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        for (int i = 1; i < csvData.size(); i++) {
+        for (int i = 0; i < csvData.size(); i++) {
             urlList.add(csvData.get(i).getUrl());
         }
         arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, urlList);
         listView.setAdapter(arrayAdapter);
     }
+
+    private List<Data> dataFilter (CharSequence constraint){
+        List<Data> suggestions = new ArrayList<>();
+
+        if(constraint == null || constraint.length() == 0){
+            suggestions.addAll(csvData);
+        }else {
+            String filterPattern = constraint.toString().toLowerCase().trim();
+
+            for (Data data: csvData){;
+                if (data.getUrl().toLowerCase().contains(filterPattern)){
+                    suggestions.add(data);
+                }
+            }
+        }
+
+        return suggestions;
+    }
+
 }
