@@ -12,7 +12,11 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -25,6 +29,7 @@ import android.widget.Toast;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -33,6 +38,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.net.URI;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -165,11 +172,31 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 10) {
+            assert data != null;
+            Uri uri = data.getData();
+            File file;
+            String path = "";
 //            Uri uri = Objects.requireNonNull(data).getData();
-//            File file = new File(uri.getPath());//create path from uri
-            String path = "/storage/emulated/0/Download/lastpass_export.csv";
-//            String path = file.getAbsolutePath();
-            System.out.println(path);
+//            File file = new File(getPath(uri));
+//            String path = "/storage/emulated/0/Download/lastpass_export.csv";
+//            String path = file.getPath();
+//            String path = getRealPathFromURI(uri);
+
+            try {
+                file = FileUtil.from(MainActivity.this,uri);
+                Log.d("file", "File...:::: uti - "+file .getPath()+" file -" + file + " : " + file .exists());
+               path = file.getPath();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+
+
+
+
+            System.out.println("sciezka : "  + path);
             try {
                 setUrlList(path);
 
